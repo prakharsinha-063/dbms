@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-import './ItemList.css';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ItemList = () => {
   const [items, setItems] = useState([]);
@@ -11,6 +10,8 @@ const ItemList = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [category, setCategory] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
 
   const fetchItems = async () => {
     try {
@@ -25,6 +26,21 @@ const ItemList = () => {
       setItems(response.data);
     } catch (err) {
       setError('Failed to fetch items');
+    }
+  };
+
+  const handleBuyNow = async (itemId) => {
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    try {
+      await axios.post('http://localhost:5000/api/orders', { itemId }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      navigate(`/item/${itemId}`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to process purchase');
     }
   };
 
@@ -91,6 +107,7 @@ const ItemList = () => {
             <p>Location: {item.location}</p>
             <p>Category: {item.category}</p>
             <Link to={`/item/${item._id}`}>View Details</Link>
+            <button onClick={() => handleBuyNow(item._id)} className="buy-now">Buy Now</button>
           </div>
         ))}
       </div>
