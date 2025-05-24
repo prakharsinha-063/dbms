@@ -1,0 +1,47 @@
+.item-details-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.item-details-container h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.item-details-container img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.item-details-container p {
+  font-size: 16px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.item-details-container button {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.item-details-container button:hover {
+  background-color: #218838;
+}
+
+.loading, .error {
+  text-align: center;
+  font-size: 16px;
+}
+
+.error {
+  color: red;
+}
