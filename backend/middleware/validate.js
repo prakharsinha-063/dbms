@@ -1,26 +1,26 @@
-const { body, validationResult } = require("express-validator");
 
-const validateItem = [
-  body("productName").notEmpty().withMessage("Product name is required"),
-  body("sellerDescription").notEmpty().withMessage("Description is required"),
-  body("price")
-    .isFloat({ min: 0 })
-    .withMessage("Price must be a positive number"),
-  body("imageLink").isURL().withMessage("Image link must be a valid URL"),
-  body("location").notEmpty().withMessage("Location is required"),
-  body("contactDetails")
-    .matches(/^(?:\S+@\S+\.\S+|\+?\d{10,})$/)
-    .withMessage("Contact details must be a valid email or phone number"),
-  body("category")
-    .isIn(["Electronics", "Batteries", "Appliances", "Other"])
-    .withMessage("Invalid category"),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+const jwt = require('jsonwebtoken');
+
+module.exports = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  if (!authHeader) {
+    console.log('No Authorization header'); // Debug
+    return res.status(401).json({ message: 'No token, authorization denied' });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  if (!token) {
+    console.log('Malformed Authorization header'); // Debug
+    return res.status(401).json({ message: 'No token, authorization denied' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, 'your-jwt-secret'); // Replace with your secret
+    console.log('Decoded token:', decoded); // Debug
+    req.user = decoded;
     next();
-  },
-];
-
-module.exports = validateItem;
+  } catch (err) {
+    console.error('Token verification error:', err.message); // Debug
+    res.status(401).json({ message: 'Invalid token' });
+  }
+};

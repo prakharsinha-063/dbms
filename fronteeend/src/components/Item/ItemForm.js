@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import './ItemForm.css'
 
 const ItemForm = () => {
   const [formData, setFormData] = useState({
@@ -16,19 +18,69 @@ const ItemForm = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: name === 'price' ? (value ? parseFloat(value) : '') : value,
+    });
+  };
+
+  const validateForm = () => {
+    if (!formData.productName.trim()) return 'Product name is required';
+    if (!formData.sellerDescription.trim()) return 'Description is required';
+    if (formData.price === '' || isNaN(formData.price) || formData.price < 0) return 'Price must be a positive number';
+    try {
+      new URL(formData.imageLink); // Validates any URL
+      if (!formData.imageLink.startsWith('http://') && !formData.imageLink.startsWith('https://')) {
+        return 'Image URL must start with http:// or https://';
+      }
+    } catch {
+      return 'Valid image URL is required';
+    }
+    if (!formData.location.trim()) return 'Location is required';
+    if (!formData.contactDetails.trim()) return 'Contact details are required';
+    if (!['Electronics', 'Batteries', 'Appliances', 'Other'].includes(formData.category)) return 'Invalid category';
+    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
+    // Validate form
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/items', formData, {
-        headers: { Authorization: `Bearer ${token}` },
+      if (!token) {
+        setError('Please login to add an item');
+        navigate('/login');
+        return;
+      }
+
+      console.log('Submitting formData:', formData); // Debug payload
+      console.log('Token:', token); // Debug token
+
+      const response = await axios.post('http://localhost:5000/api/items', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
+
+      console.log('Item created:', response.data); // Debug success
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create item');
+      console.error('Error response:', err.response?.data); // Debug error
+      const errorMsg = err.response?.data?.errors?.map(e => e.msg).join(', ') ||
+                       err.response?.data?.message ||
+                       err.message ||
+                       'Failed to create item';
+      setError(errorMsg);
     }
   };
 
@@ -45,6 +97,7 @@ const ItemForm = () => {
             value={formData.productName}
             onChange={handleChange}
             required
+            placeholder="e.g., Used Smartphone"
           />
         </div>
         <div className="form-group">
@@ -54,6 +107,7 @@ const ItemForm = () => {
             value={formData.sellerDescription}
             onChange={handleChange}
             required
+            placeholder="e.g., Good condition, minor scratches"
           ></textarea>
         </div>
         <div className="form-group">
@@ -65,16 +119,19 @@ const ItemForm = () => {
             onChange={handleChange}
             required
             min="0"
+            step="0.01"
+            placeholder="e.g., 50.00"
           />
         </div>
         <div className="form-group">
           <label>Image Link</label>
           <input
-            type="url"
+            type="text"
             name="imageLink"
             value={formData.imageLink}
             onChange={handleChange}
             required
+            placeholder="e.g., https://example.com/image"
           />
         </div>
         <div className="form-group">
@@ -85,6 +142,7 @@ const ItemForm = () => {
             value={formData.location}
             onChange={handleChange}
             required
+            placeholder="e.g., Mumbai"
           />
         </div>
         <div className="form-group">
@@ -95,6 +153,7 @@ const ItemForm = () => {
             value={formData.contactDetails}
             onChange={handleChange}
             required
+            placeholder="e.g., 9876543210"
           />
         </div>
         <div className="form-group">
